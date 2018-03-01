@@ -1,5 +1,3 @@
-;; (load-flatfile session-reasoner)
-
 (in-microtheory TaskGlobalMt)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11,26 +9,31 @@
     (happensAfter ?z ?y))
     
 ;; Rule defining where a person currently is.
+;; This considers the case only one micro-theory talks has movesTo.
+;;
+;; NOTE: 
+;; the following is equivalent to:
+;;     (thereExistExactly 1 ?microtheory (ist-Information ?microtheory (MovesTo ?person ?place)))
+;;
+;; but apparently companions can't handle "thereExist" clauses.
+;;
 (<== (isCurrentlyIn ?person ?place)
-    (or 
-        ;; Only one movesTo exists
-        (thereExistExactly 1 ?microtheory (ist-Information ?microtheory (MovesTo ?person ?place)))
-        ;; More than one movesTo exists, gets the place of the latest event.
-        (thereExists ?microtheory1 
-            (and 
-                (ist-Information ?microtheory1 (MovesTo ?person ?place))
-                (not 
-                    (thereExists ?microtheory2
-                        (and
-                            (ist-Information ?microtheory2 (MovesTo ?person ?anotherPlace))
-                            (happensAfter ?microtheory2 ?microtheory1)
-                        )
-                    )
-                )
-            )
-        )
-    )
-)
+    ;; 
+    (evaluate 1
+        ;; Count the number of micro-theories that has the movesTo actions.
+        (CardinalityFn
+            (TheClosedRetrievalSetOf ?microtheory
+                (ist-Information ?microtheory (MovesTo ?person ?place))))))
+
+;; Rule defining where a person currently is.
+;; This considers the case more than one micro-theory has movesTo action.
+;; More than one movesTo exists, gets the place associated with the
+;; latest event micro-theory.
+;;
+(<== (isCurrentlyIn ?person ?place)
+    (ist-Information ?microtheory1 (MovesTo ?person ?place))
+    (ist-Information ?microtheory2 (MovesTo ?person ?anotherPlace))
+    (happensAfter ?microtheory1 ?microtheory2))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Logic Rules
