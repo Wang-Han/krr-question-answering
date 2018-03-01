@@ -1,0 +1,59 @@
+(in-microtheory TaskGlobalMt)
+
+(isa TaskLocalMt Microtheory)
+(genlMt TaskLocalMt TaskGlobalMt)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Entities
+
+(isa TaskJohn Person)
+(isa TaskMary Person)
+(isa TaskDaniel Person)
+(isa TaskSandra Person)
+(isa TaskHallway Place)
+(isa TaskBathroom Place)
+(isa TaskBedroom Place)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Events
+ 
+;; Event 1
+(in-microtheory TaskLocalMt)
+(isa Event1Mt Microtheory)
+(genlMt Event1Mt TaskLocalMt)
+(in-microtheory Event1Mt)
+(MovesTo TaskJohn TaskHallway)
+
+;; Event 2
+(in-microtheory TaskLocalMt)
+(isa Event2Mt Microtheory)
+(genlMt Event2Mt TaskLocalMt)
+(happensAfter Event2Mt Event1Mt)
+(in-microtheory Event2Mt)
+(MovesTo TaskMary TaskBathroom)
+
+;; Event 3
+(in-microtheory TaskLocalMt)
+(isa Event3Mt Microtheory)
+(genlMt Event3Mt TaskLocalMt)
+(happensAfter Event3Mt Event2Mt)
+(in-microtheory Event3Mt)
+(MovesTo TaskDaniel TaskBathroom)
+
+;; Event 4
+(in-microtheory TaskLocalMt)
+(isa Event4Mt Microtheory)
+(genlMt Event4Mt TaskLocalMt)
+(happensAfter Event4Mt Event3Mt)
+(in-microtheory Event4Mt)
+(MovesTo TaskJohn TaskBedroom)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Queries
+
+; (isCurrentlyIn TaskJohn ?x)
+; (doForgetKBMt TaskLocalMt)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; End of Code

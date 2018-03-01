@@ -1,0 +1,43 @@
+;; (load-flatfile session-reasoner)
+
+(in-microtheory TaskGlobalMt)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Rules
+
+;; Happens after transitivity.
+(<== (happensAfter ?z ?x)
+    (happensAfter ?y ?x)
+    (happensAfter ?z ?y))
+    
+;; Rule defining where a person currently is.
+(<== (isCurrentlyIn ?person ?place)
+    (or 
+        ;; Only one movesTo exists
+        (thereExistExactly 1 ?microtheory (ist-Information ?microtheory (MovesTo ?person ?place)))
+        ;; More than one movesTo exists, gets the place of the latest event.
+        (thereExists ?microtheory1 
+            (and 
+                (ist-Information ?microtheory1 (MovesTo ?person ?place))
+                (not 
+                    (thereExists ?microtheory2
+                        (and
+                            (ist-Information ?microtheory2 (MovesTo ?person ?anotherPlace))
+                            (happensAfter ?microtheory2 ?microtheory1)
+                        )
+                    )
+                )
+            )
+        )
+    )
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Logic Rules
+
+;; Implement Prolog's negation by failure.
+(<== (not ?fact)
+     (uninferredSentence ?fact))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; End of Code

@@ -1,0 +1,30 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(in-microtheory TaskGlobalMt)
+
+(isa TaskGlobalMt Microtheory)
+(comment TaskGlobalMt
+  "Task1Mt is a microtheory for testing task related questions.")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Predicates
+
+(isa isCurrentlyIn Predicate)
+(arity isCurrentlyIn 2)
+(arg1Isa isCurrentlyIn Person)
+(arg2Isa isCurrentlyIn Place)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Relations
+
+(isa MovesTo Relation)
+(arity MovesTo 2)
+(arg1Isa MovesTo Person)
+(arg2Isa MovesTo Place)
+
+(isa happensAfter Relation)
+(arity happensAfter 2)
+(arg1Isa happensAfter Microtheory)
+(arg2Isa happensAfter Microtheory)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; End of Code
