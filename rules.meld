@@ -13,17 +13,17 @@
 ;;
 ;; NOTE: 
 ;; the following is equivalent to:
-;;     (thereExistExactly 1 ?microtheory (ist-Information ?microtheory (MovesTo ?person ?place)))
+;;     (thereExistExactly 1 ?microtheory (ist-Information ?microtheory (MovesTo ?person ?anyPlace)))
 ;;
 ;; but apparently companions can't handle "thereExist" clauses.
 ;;
 (<== (isCurrentlyIn ?person ?place)
-    ;; 
+    (ist-Information ?microtheory (MovesTo ?person ?place))
     (evaluate 1
         ;; Count the number of micro-theories that has the movesTo actions.
         (CardinalityFn
-            (TheClosedRetrievalSetOf ?microtheory
-                (ist-Information ?microtheory (MovesTo ?person ?place))))))
+            (TheClosedRetrievalSetOf ?anyMicrotheory
+                (ist-Information ?anyMicrotheory (MovesTo ?person ?anyPlace))))))
 
 ;; Rule defining where a person currently is.
 ;; This considers the case more than one micro-theory has movesTo action.
