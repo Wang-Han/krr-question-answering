@@ -50,6 +50,26 @@
   (concatenate 'string "Event" event-number "Mt")
 )
 
+;; Add Person entites into KB
+(defun person-entities (lines)  
+  (dolist (line lines)
+    (let ((tokens (string-split line)))
+      (if (string/= (cadr tokens) "Where")
+            (kb-store (list 'isa (intern (add-task-prefix (cadr tokens))) 'Person) 'TaskLocalMt)
+        ))
+    )
+  )
+
+;; Add Place entites into KB
+(defun place-entities (lines)
+  (dolist (line lines)
+    (let ((tokens (string-split line)))
+      (if (string/= (cadr tokens) "Where")
+          (kb-store (list 'isa (intern (add-task-prefix (string-right-trim "." (car (last tokens))))) 'Place) 'TaskLocalMt)
+        )
+      ))
+  )
+
 (defun execute-task1 (lines)
   (let ((output-response-list '()))
   (dolist (line lines)
@@ -148,6 +168,8 @@
   (let ((lines (read-text-file "qa1_single-supporting-fact_test.txt")))
     (write lines)
     (terpri)
+    (write (person-entities lines))
+    (write (place-entities lines))
     (write (execute-task1 lines))
     
     ;; loops though the lines in the input file.
