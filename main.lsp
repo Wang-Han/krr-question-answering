@@ -1,3 +1,7 @@
+
+(setq file-root "C:\\Users\\Han\\Desktop\\371-KRR\\krr-question-answering\\")
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Text and parsing functions
 
@@ -51,26 +55,19 @@
 )
 
 ;; Add Person entites into KB
-(defun person-entities (lines)  
+(defun add-entities (lines)  
   (dolist (line lines)
     (let ((tokens (string-split line)))
       (if (string/= (cadr tokens) "Where")
-            (kb-store (list 'isa (intern (add-task-prefix (cadr tokens))) 'Person) 'TaskLocalMt)
-        ))
+        (kb-store (list 'isa (intern (add-task-prefix (cadr tokens))) 'Person) 'TaskLocalMt)
+        (kb-store (list 'isa (intern (add-task-prefix (string-right-trim "." (car (last tokens))))) 'Place) 'TaskLocalMt)
+      )
     )
   )
-
-;; Add Place entites into KB
-(defun place-entities (lines)
-  (dolist (line lines)
-    (let ((tokens (string-split line)))
-      (if (string/= (cadr tokens) "Where")
-          (kb-store (list 'isa (intern (add-task-prefix (string-right-trim "." (car (last tokens))))) 'Place) 'TaskLocalMt)
-        )
-      ))
-  )
+)
 
 (defun execute-task1 (lines)
+  (add-entities lines)
   (let ((output-response-list '()))
   (dolist (line lines)
     (let ((tokens (string-split line)))
@@ -165,11 +162,9 @@
 ;; TODO: get result of queries from companions/FIRE and write results on output
 ;; file.
 (defun main ()
-  (let ((lines (read-text-file "qa1_single-supporting-fact_test.txt")))
+  (let ((lines (read-text-file (concatenate 'string file-root "qa1_single-supporting-fact_test.txt"))))
     (write lines)
     (terpri)
-    (write (person-entities lines))
-    (write (place-entities lines))
     (write (execute-task1 lines))
     
     ;; loops though the lines in the input file.
