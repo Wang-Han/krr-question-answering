@@ -7,7 +7,7 @@
   (let ((file (open file-name :if-does-not-exist nil))
         (return-str (list)))
     (when file
-      (loop for it from 1 to 5
+      (loop for it from 1 to 20
           do (setq return-str 
                    (append return-str 
                      (list (read-line file)))))
@@ -37,17 +37,104 @@
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; FIRE functions (only works on companions shell)
+;; Task 1 related functions
 
-;; That's how we can query fire from companions command line.
-;; (defun ask-f (q)
-;;     (fire::ask-it q 
-;;     :context :all :response :bindings))
+;; Adds a task prefix to the string, we should do that for name of people, places
+;; and objects since they might collide with existing data in the KB.
+(defun add-task-prefix (str)
+  (concatenate 'string "Task" str)
+)
+
+;; Creates an event name for an event number.
+(defun event-name-from-number (event-number)
+  (concatenate 'string "Event" event-number "Mt")
+)
+
+(defun execute-task1 (lines)
+  (let ((output-response-list '()))
+  (dolist (line lines)
+    (let ((tokens (string-split line)))
+    (let ((event-number (nth 0 tokens))
+          (previous-event nil)
+          (previous-events '()))
+      ;; If first token is "1" clean the KB.
+      (if (string= event-number "1")
+        (progn
+          (setq previous-event nil)
+          (setq previous-events '())
+          (clean-local-mt previous-events)
+        )
+      )
+      (if (string= (nth 1 tokens) "Where")
+        ;; The line is of the form "3 Where is John? hallway 1" 
+        ;; perform a query.
+        (let ((person (add-task-prefix (string-right-trim "?" (nth 3 tokens))))
+              (current-place nil))
+          ;; TODO: get result and store in local variable.
+          (setq current-place (cdr (car (car (ask-q (list 'isCurrentlyIn (intern person) '?x))))))
+          (setq output-response-list (append output-response-list current-place))
+        )
+        
+        ;; Otherwise the line is of the form "1 John travelled to the hallway."
+        ;; Add information to the KB.
+        (let ((event-mt (intern (event-name-from-number event-number)))
+              (person  (intern (add-task-prefix (nth 1 tokens))))
+              (place (intern (add-task-prefix (string-right-trim "." (nth 3 tokens))))))
+          
+          ;; Store data in KB.
+          (kb-store (list 'isa event-mt 'Microtheory) 'TaskLocalMt)
+          (kb-store (list 'genlMt event-mt 'TaskLocalMt) 'TaskLocalMt)
+          (kb-store (list 'MovesTo person place) event-mt)
+          (if previous-event
+            (kb-store (list 'happensAfter event previous-event) 'TaskLocalMt)
+          )
+          
+          ;; Update previous event.
+          (setq previous-event event-mt)
+          (setq previous-events (append previous-events '(event-mt)))
+        )
+      )
+    ))
+  )
+  ;; return the list of places got from the "Where is" queries.  
+  output-response-list)  
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; FIRE related functions 
+
+;; NOTE: following FIRE functions only works on companions shell - 
+;; uncomment them when needed
+
+;; Ask fire from companions command line.
+(defun ask-f (query)
+  ;; (fire::ask-it query :context :all :response :bindings)
+  (write query) (terpri) ;; TODO: delete this.
+)
     
-;; TODO find what function in FIRE does query instead of ask-it
-;; (defun ask-q  (q)
-;;    (fire::query q 
-;;    :context :all :response :bindings))
+;; Query fire from companions command line. 
+;; We should normally use this one since it supports inference.
+(defun ask-q  (query)
+  ;; (fire::q query :context :all :response :bindings)
+  (write query) (terpri) (list (list (list 'x 'place))) ;; TODO: delete this.
+)
+
+(defun kb-store (fact microtheory)
+  ;; (fire::kb-store fat :mt microtheory)
+  (write fact) (write '-) ;; TODO: delete this.
+  (write microtheory) (terpri) ;; TODO: delete this.
+)
+
+(defun nuke-kb-item ()
+  ;; (fire::nuke-kb-item 'TaskLocalMt) 
+  (write query) (terpri) ;; TODO: delete this.
+)
+
+(defun clean-local-mt (list-event-mt)
+  ;; (dolist (event-mt list-event-mt) (fire::nuke-kb-item event-mt))
+  ;; (fire::nuke-kb-item 'TaskLocalMt)
+  (write list-event-mt) (terpri) ;; TODO: delete this.
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Main
@@ -58,15 +145,18 @@
 ;; TODO: get result of queries from companions/FIRE and write results on output
 ;; file.
 (defun main ()
-  (let ((lines (read-text-file "qa1_single-supporting-fact_test.txt"))
-        (output-str ""))
+  (let ((lines (read-text-file "qa1_single-supporting-fact_test.txt")))
+    (write lines)
+    (terpri)
+    (write (execute-task1 lines))
+    
     ;; loops though the lines in the input file.
-    (loop for line in lines 
-        do (loop for token in (string-split line) 
-               do (setq output-str (concatenate 'string output-str 
-                                     (format nil "~s~%" token)))))
+    ;; (loop for line in lines 
+    ;;    do (loop for token in (string-split line) 
+    ;;           do (setq output-str (concatenate 'string output-str 
+    ;;                                 (format nil "~s~%" token)))))
     ;; writes the output-str to output file.
-    (write-text-file "out.txt" output-str)
+    ;; (write-text-file "out.txt" output-str)
   )
 )
 

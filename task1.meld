@@ -6,6 +6,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Entities
 
+(in-microtheory TaskLocalMt)
 (isa TaskJohn Person)
 (isa TaskMary Person)
 (isa TaskDaniel Person)
