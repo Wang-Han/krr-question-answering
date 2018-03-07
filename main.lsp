@@ -2,6 +2,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Constants
 
+;; (load "C:\\Users\\danil\\Documents\\Northwestern\\Winter 2018\\EECS 371 - NRR\\Project\\krr-question-answering\\main.lsp")
+
 ;; Not sure how to user relative paths in lisp. Work with absolute paths for now.
 ;; NOTE: Remember to change that before running.
 (setq file-root "C:\\Users\\Han\\Desktop\\371-KRR\\krr-question-answering\\")
@@ -16,11 +18,10 @@
   (let ((file (open file-name :if-does-not-exist nil))
         (return-str (list)))
     (when file
-      (loop for it from 1 to 20
-          do (setq return-str 
-                   (append return-str 
-                     (list (read-line file)))))
-      (close file))
+        (do ((line (read-line file nil) (read-line file nil)))
+            ((null line))
+            (setq return-str (append return-str (list line))))
+        (close file))
     return-str
   )
 )
@@ -32,18 +33,20 @@
   )
 )
 
-;; Helper for the (string-split) function.
-(defun string-split-delimiter (c) (or (char= c #\Space) (char= c #\,)))
-
-;; Splits a string, the delimiters are defined in delimiterp
-(defun string-split (string &key (delimiterp #'string-split-delimiter))
-  (loop :for beg = (position-if-not delimiterp string)
-    :then (position-if-not delimiterp string :start (1+ end))
-    :for end = (and beg (position-if delimiterp string :start beg))
-    :when beg :collect (subseq string beg end)
-    :while end
-  )
-)
+;; Splits a string, the delimiters are defined in delimiterp.
+(defun string-split (chars str &optional (lst nil) (accm ""))
+  (cond
+    ((= (length str) 0) (reverse (cons accm lst)))
+    (t
+     (let ((c (char str 0)))
+       (if (member c chars)
+    (string-split chars (subseq str 1) (cons accm lst) "")
+    (string-split chars (subseq str 1) 
+                        lst 
+                        (concatenate 'string
+           accm
+         (string c))))
+   ))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Task 1 related functions
@@ -61,22 +64,25 @@
 
 ;; Add entites (Person and Places) into KB
 (defun add-entities (lines)  
+  ;; TODO: When cleaning the 'TaskLocalMt we were also removing entities.
+  ;; Now we are adding them to 'TaskGlobalMt but that's not the best solution
+  ;; If we are running multiple tasks.
   (let ((persons-seen-list '())
           (places-seen-list '()))
     (dolist (line lines)
-      (let ((tokens (string-split line)))
+      (let ((tokens (string-split (list #\Space) line)))
         (if (string/= (cadr tokens) "Where")
           (let ((person (intern (add-task-prefix (cadr tokens))))
                 (place (intern (add-task-prefix (string-right-trim "." (car (last tokens)))))))
             (if (not (member person persons-seen-list))
               (progn
-                (kb-store (list 'isa person 'Person) 'TaskLocalMt)
+                (kb-store (list 'isa person 'Person) 'TaskGlobalMt)
                 (setq persons-seen-list (append persons-seen-list (list person)))
               )
             )
             (if (not (member place places-seen-list))
               (progn
-                (kb-store (list 'isa place 'Place) 'TaskLocalMt)
+                (kb-store (list 'isa place 'Place) 'TaskGlobalMt)
                 (setq places-seen-list (append places-seen-list (list place)))
               )
             )
@@ -89,18 +95,17 @@
 
 (defun execute-task1 (lines)
   (add-entities lines)
-  (let ((output-response-list '()))
+  (let ((output-response-list '())
+        (previous-event nil))
   (dolist (line lines)
-    (let ((tokens (string-split line)))
-    (let ((event-number (nth 0 tokens))
-          (previous-event nil)
-          (previous-events '()))
+    (let ((tokens (string-split (list #\Space) line)))
+    (let ((event-number (nth 0 tokens)))
+      
       ;; If first token is "1" clean the KB.
       (if (string= event-number "1")
         (progn
           (setq previous-event nil)
-          (setq previous-events '())
-          (clean-local-mt previous-events)
+          (clean-local-mt)
         )
       )
       (if (string= (nth 1 tokens) "Where")
@@ -108,28 +113,35 @@
         ;; perform a query.
         (let ((person (add-task-prefix (string-right-trim "?" (nth 3 tokens))))
               (current-place nil))
-          ;; TODO: get result and store in local variable.
-          (setq current-place (cdr (car (car (ask-q (list 'isCurrentlyIn (intern person) '?x))))))
-          (setq output-response-list (append output-response-list current-place))
+          
+          ;; Clear working memory to prevent using old isCurrentlyIn facts.
+          (clear-wm)
+          ;; For some weird reason facts in GlobalMt are being deleted.
+          ;; Loading this file again fixes the problem for now.
+          (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+          
+          (setq current-place (ask-q (list 'isCurrentlyIn (intern person) '?x)))
+          (write current-place) (terpri) (terpri) ;; TODO - Delete.
+          (setq current-place (cdr (car (car current-place))))
+          (setq output-response-list (append output-response-list (list current-place)))
         )
         
         ;; Otherwise the line is of the form "1 John travelled to the hallway."
         ;; Add information to the KB.
         (let ((event-mt (intern (event-name-from-number event-number)))
               (person  (intern (add-task-prefix (nth 1 tokens))))
-              (place (intern (add-task-prefix (string-right-trim "." (nth 3 tokens))))))
+              (place (intern (add-task-prefix (string-right-trim "." (car (last tokens)))))))
           
           ;; Store data in KB.
           (kb-store (list 'isa event-mt 'Microtheory) 'TaskLocalMt)
           (kb-store (list 'genlMt event-mt 'TaskLocalMt) 'TaskLocalMt)
           (kb-store (list 'MovesTo person place) event-mt)
           (if previous-event
-            (kb-store (list 'happensAfter event previous-event) 'TaskLocalMt)
+            (kb-store (list 'happensAfter event-mt previous-event) 'TaskLocalMt)
           )
           
           ;; Update previous event.
           (setq previous-event event-mt)
-          (setq previous-events (append previous-events '(event-mt)))
         )
       )
     ))
@@ -142,36 +154,46 @@
 ;; FIRE related functions 
 
 ;; NOTE: following FIRE functions only works on companions shell - 
-;; uncomment them when needed
+;; uncomment/comment them when needed
 
 ;; Ask fire from companions command line.
 (defun ask-f (query)
-  ; (fire::ask-it query :context :all :response :bindings)
   (write query) (terpri) ;; TODO: delete this.
+  (fire::ask-it query :context :all :response :bindings)
 )
     
 ;; Query fire from companions command line. 
 ;; We should normally use this one since it supports inference.
-(defun ask-q  (query)
-  ; (fire::q query :context :all :response :bindings)
+(defun ask-q (query)
   (write query) (terpri) (list (list (list 'x 'place))) ;; TODO: delete this.
+  (fire::q query :context :all :response :bindings)
 )
 
 (defun kb-store (fact microtheory)
-  ; (fire::kb-store fat :mt microtheory)
   (write fact) (write '-) ;; TODO: delete this.
   (write microtheory) (terpri) ;; TODO: delete this.
+  (fire::kb-store fact :mt microtheory)
 )
 
 (defun nuke-kb-item ()
-  ; (fire::nuke-kb-item 'TaskLocalMt) 
   (write query) (terpri) ;; TODO: delete this.
+  (fire::nuke-kb-item 'TaskLocalMt)
 )
 
-(defun clean-local-mt (list-event-mt)
-  ; (dolist (event-mt list-event-mt) (fire::nuke-kb-item event-mt))
-  ; (fire::nuke-kb-item 'TaskLocalMt)
-  (write list-event-mt) (terpri) ;; TODO: delete this.
+(defun clean-local-mt ()
+  (dolist (mt (fire::tabulate-mt-sizes))
+    (if (and 
+         (eql 'symbol (type-of (car mt)))
+         (string= "Event" (subseq (string (car mt)) 0 5))  
+        )
+      (progn
+        (write "nuking: ") (write (car mt)) (terpri) ;; TODO: delete this.
+        (fire::nuke-kb-item (car mt))
+      )
+    )
+  )
+  (write "nuking: ") (write 'TaskLocalMt) (terpri)
+  (fire::nuke-kb-item 'TaskLocalMt)
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -184,17 +206,16 @@
 ;; file.
 (defun main ()
   (let ((lines (read-text-file (concatenate 'string file-root "qa1_single-supporting-fact_test.txt"))))
-    (write lines)
-    (terpri)
-    (write (execute-task1 lines))
-    
-    ;; loops though the lines in the input file.
-    ;; (loop for line in lines 
-    ;;    do (loop for token in (string-split line) 
-    ;;           do (setq output-str (concatenate 'string output-str 
-    ;;                                 (format nil "~s~%" token)))))
-    ;; writes the output-str to output file.
-    ;; (write-text-file "out.txt" output-str)
+    (let ((output (execute-task1 lines))
+          (output-str ""))
+      (dolist (element output)
+        (setq output-str (concatenate 'string output-str 
+                                     (format nil "~s~%" element)))
+      )
+      ;; writes the output-str to output file.
+      (write-text-file (concatenate 'string file-root "out.txt") output-str)
+      (write "ouput saved to out.txt")
+    )
   )
 )
 
