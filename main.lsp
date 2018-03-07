@@ -1,8 +1,13 @@
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Constants
+
+;; Not sure how to user relative paths in lisp. Work with absolute paths for now.
+;; NOTE: Remember to change that before running.
 (setq file-root "C:\\Users\\Han\\Desktop\\371-KRR\\krr-question-answering\\")
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; Text and parsing functions
 
 ;; Reads a text file and returns list of string with the file's lines.
@@ -54,13 +59,29 @@
   (concatenate 'string "Event" event-number "Mt")
 )
 
-;; Add Person entites into KB
+;; Add entites (Person and Places) into KB
 (defun add-entities (lines)  
-  (dolist (line lines)
-    (let ((tokens (string-split line)))
-      (if (string/= (cadr tokens) "Where")
-        (kb-store (list 'isa (intern (add-task-prefix (cadr tokens))) 'Person) 'TaskLocalMt)
-        (kb-store (list 'isa (intern (add-task-prefix (string-right-trim "." (car (last tokens))))) 'Place) 'TaskLocalMt)
+  (let ((persons-seen-list '())
+          (places-seen-list '()))
+    (dolist (line lines)
+      (let ((tokens (string-split line)))
+        (if (string/= (cadr tokens) "Where")
+          (let ((person (intern (add-task-prefix (cadr tokens))))
+                (place (intern (add-task-prefix (string-right-trim "." (car (last tokens)))))))
+            (if (not (member person persons-seen-list))
+              (progn
+                (kb-store (list 'isa person 'Person) 'TaskLocalMt)
+                (setq persons-seen-list (append persons-seen-list (list person)))
+              )
+            )
+            (if (not (member place places-seen-list))
+              (progn
+                (kb-store (list 'isa place 'Place) 'TaskLocalMt)
+                (setq places-seen-list (append places-seen-list (list place)))
+              )
+            )
+          )
+        )
       )
     )
   )
@@ -125,31 +146,31 @@
 
 ;; Ask fire from companions command line.
 (defun ask-f (query)
-  ;; (fire::ask-it query :context :all :response :bindings)
+  ; (fire::ask-it query :context :all :response :bindings)
   (write query) (terpri) ;; TODO: delete this.
 )
     
 ;; Query fire from companions command line. 
 ;; We should normally use this one since it supports inference.
 (defun ask-q  (query)
-  ;; (fire::q query :context :all :response :bindings)
+  ; (fire::q query :context :all :response :bindings)
   (write query) (terpri) (list (list (list 'x 'place))) ;; TODO: delete this.
 )
 
 (defun kb-store (fact microtheory)
-  ;; (fire::kb-store fat :mt microtheory)
+  ; (fire::kb-store fat :mt microtheory)
   (write fact) (write '-) ;; TODO: delete this.
   (write microtheory) (terpri) ;; TODO: delete this.
 )
 
 (defun nuke-kb-item ()
-  ;; (fire::nuke-kb-item 'TaskLocalMt) 
+  ; (fire::nuke-kb-item 'TaskLocalMt) 
   (write query) (terpri) ;; TODO: delete this.
 )
 
 (defun clean-local-mt (list-event-mt)
-  ;; (dolist (event-mt list-event-mt) (fire::nuke-kb-item event-mt))
-  ;; (fire::nuke-kb-item 'TaskLocalMt)
+  ; (dolist (event-mt list-event-mt) (fire::nuke-kb-item event-mt))
+  ; (fire::nuke-kb-item 'TaskLocalMt)
   (write list-event-mt) (terpri) ;; TODO: delete this.
 )
 
