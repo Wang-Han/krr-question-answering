@@ -31,12 +31,15 @@
 ;; latest event micro-theory.
 ;;
 (<== (isCurrentlyIn ?person ?place)
+    (genlMt ?microtheory1 TaskLocalMt)
     (ist-Information ?microtheory1 (MovesTo ?person ?place))
     (evaluate 0
         ;; Count the number of micro-theories that happens after ?microtheory1.
         (CardinalityFn
             (TheClosedRetrievalSetOf ?microtheory2
-                (happensAfter ?microtheory2 ?microtheory1)))))
+                (and (genlMt ?microtheory2 TaskLocalMt)
+                     (ist-Information ?microtheory2 (MovesTo ?person ?anotherPlace))
+                     (happensAfter ?microtheory2 ?microtheory1) )))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Logic Rules

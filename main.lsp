@@ -98,6 +98,7 @@
   (dolist (line lines)
     (let ((tokens (string-split (list #\Space) line)))
     (let ((event-number (nth 0 tokens)))
+      
       ;; If first token is "1" clean the KB.
       (if (string= event-number "1")
         (progn
@@ -110,7 +111,13 @@
         ;; perform a query.
         (let ((person (add-task-prefix (string-right-trim "?" (nth 3 tokens))))
               (current-place nil))
-          ;; TODO: get result and store in local variable.
+          
+          ;; Clear working memory to prevent using old isCurrentlyIn facts.
+          (clear-wm)
+          ;; For some weird reason facts in GlobalMt are being deleted.
+          ;; Loading this file again fixes the problem for now.
+          (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+          
           (setq current-place (ask-q (list 'isCurrentlyIn (intern person) '?x)))
           (write current-place) (terpri) (terpri) ;; TODO - Delete.
           (setq current-place (cdr (car (car current-place))))
@@ -197,15 +204,16 @@
 ;; file.
 (defun main ()
   (let ((lines (read-text-file (concatenate 'string file-root "qa1_single-supporting-fact_test.txt"))))
-    (write (execute-task1 lines))
-    
-    ;; loops though the lines in the input file.
-    ;; (for line in lines 
-    ;;    do (loop for token in (string-split (list #\Space) line) 
-    ;;           do (setq output-str (concatenate 'string output-str 
-    ;;                                 (format nil "~s~%" token)))))
-    ;; writes the output-str to output file.
-    ;; (write-text-file "out.txt" output-str)
+    (let ((output (execute-task1 lines))
+          (output-str ""))
+      (dolist (element output)
+        (setq output-str (concatenate 'string output-str 
+                                     (format nil "~s~%" element)))
+      )
+      ;; writes the output-str to output file.
+      (write-text-file (concatenate 'string file-root "out.txt") output-str)
+      (write "ouput saved to out.txt")
+    )
   )
 )
 
