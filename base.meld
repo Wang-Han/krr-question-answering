@@ -53,7 +53,7 @@
 (arg1Isa isHoldingObject Person)
 (arg2Isa isHoldingObject InanimateObject)
 
-(isa lastGiveTo Relation)
+(isa lastGiveTo Predicate)
 (arity lastGiveTo 3)
 (arg1Isa lastGiveTo Person)
 (arg2Isa lastGiveTo Person)
