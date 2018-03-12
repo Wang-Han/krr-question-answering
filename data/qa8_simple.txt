@@ -1,0 +1,57 @@
+1 Mary got the milk there.
+2 John moved to the bedroom.
+3 What is Mary carrying? 	milk	1
+4 John picked up the football there.
+5 John journeyed to the bathroom.
+6 What is John carrying? 	football	4
+7 John went to the garden.
+8 Daniel went back to the hallway.
+9 What is John carrying? 	football	4
+10 John went back to the bathroom.
+11 Mary went to the office.
+12 Sandra went back to the kitchen.
+13 Mary travelled to the hallway.
+14 John travelled to the bedroom.
+15 John picked up the apple there.
+16 What is John carrying? 	football,apple	4 15
+17 Sandra travelled to the bedroom.
+18 Sandra journeyed to the kitchen.
+19 What is John carrying? 	football,apple	4 15
+1 Daniel grabbed the milk there.
+2 Sandra went back to the bathroom.
+3 What is Daniel carrying? 	milk	1
+4 Daniel went back to the garden.
+5 Daniel dropped the milk.
+6 What is Daniel carrying? 	nothing	1 5
+7 John travelled to the bedroom.
+8 Sandra journeyed to the bedroom.
+9 What is Daniel carrying? 	nothing	1 5
+10 Daniel journeyed to the bedroom.
+11 John went to the bathroom.
+12 What is Daniel carrying? 	nothing	1 5
+13 John travelled to the kitchen.
+14 Sandra went to the kitchen.
+15 Mary went back to the bedroom.
+16 John journeyed to the office.
+17 John moved to the garden.
+18 John grabbed the milk there.
+19 What is John carrying? 	milk	18
+1 Mary grabbed the milk there.
+2 Daniel moved to the bedroom.
+3 What is Mary carrying? 	milk	1
+4 John travelled to the bedroom.
+5 Daniel grabbed the apple there.
+6 What is Daniel carrying? 	apple	5
+7 Daniel discarded the apple.
+8 John went back to the garden.
+9 What is Daniel carrying? 	nothing	5 7
+10 Daniel went back to the office.
+11 Mary travelled to the garden.
+12 What is Daniel carrying? 	nothing	5 7
+13 Mary journeyed to the hallway.
+14 Daniel went to the hallway.
+15 John went to the bathroom.
+16 John went back to the kitchen.
+17 Mary discarded the milk there.
+18 Sandra grabbed the milk there.
+19 What is Mary carrying? 	nothing	1 17
