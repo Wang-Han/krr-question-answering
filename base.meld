@@ -75,5 +75,11 @@
 (arg1Isa droppedObject Person)
 (arg2Isa droppedObject InanimateObject)
 
+(isa giveTo Relation)
+(arity giveTo 3)
+(arg1Isa giveTo Person)
+(arg2Isa giveTo Person)
+(arg3Isa giveTo InanimateObject)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; End of Code

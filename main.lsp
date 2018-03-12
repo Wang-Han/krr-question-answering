@@ -5,7 +5,7 @@
 
 ;; Not sure how to user relative paths in lisp. Work with absolute paths for now.
 ;; NOTE: Remember to change that before running.
-(setq file-root "C:\\Users\\Han\\Desktop\\371-KRR\\krr-question-answering\\")
+(setq file-root "C:\\Users\\danil\\Documents\\Northwestern\\Winter 2018\\EECS 371 - NRR\\Project\\krr-question-answering\\")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Text and parsing functions
@@ -81,6 +81,21 @@
    ((string= word "put") 'droppedObject)
    ((string= word "dropped") 'droppedObject)
    ((string= word "left") 'droppedObject)
+   
+   ((string= word "gave") 'giveTo)
+   ((string= word "passed") 'giveTo)
+   ((string= word "handed") 'giveTo)
+  )
+)
+
+(defun get-written-number (number)
+  (cond 
+   ((eql number 0) 'none)
+   ((eql number 1) 'one)
+   ((eql number 2) 'two)
+   ((eql number 3) 'three)
+   ((eql number 4) 'four)
+   ((eql number 5) 'five)
   )
 )
 
@@ -143,7 +158,6 @@
   ;; return the list of places got from the "Where is" queries.  
   output-response-list)  
 )
-comments|#
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Task 2 related functions
@@ -237,7 +251,7 @@ comments|#
   output-response-list)  
 )
 
-#|multiline
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Task 4 related functions
 
@@ -314,7 +328,6 @@ comments|#
   ;; return the list of places got from the "Where is" queries.  
   output-response-list)  
 )
-comments|#
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Task 6 related functions
@@ -379,6 +392,117 @@ comments|#
     ))
   )
   ;; return the list of answer got from the "isCurrentlyIn" queries.  
+  output-response-list)
+)
+
+comments|#
+
+;; Task 7 related functions
+
+(defun execute-task7 (lines)
+  (let ((output-response-list '())
+        (previous-event nil))
+  (dolist (line lines)
+    (let ((tokens (string-split (list #\Space #\tab) line)))
+    (let ((event-number (nth 0 tokens)))
+      
+      ;; If first token is "1" clean the KB.
+      (if (string= event-number "1")
+        (progn
+          (setq previous-event nil)
+          (clean-local-mt)
+        )
+      )
+      (if (string= (nth 1 tokens) "How")
+        ;; The line is of the form "3 How many objects is Mary carrying? one 1" 
+        ;; perform a query.
+        (let ((person (intern (add-task-prefix (nth 5 tokens))))
+              (current-place nil))
+          
+          ;; Clear working memory to prevent using old facts.
+          (clear-wm)
+          ;; For some weird reason facts in GlobalMt are being deleted.
+          ;; Loading this file again fixes the problem for now.
+          (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+           
+          (setq objects (ask-q (list 'isHoldingObject person '?x)))
+          (write objects) (terpri) (terpri) ;; TODO - Delete.
+          (setq number-objects (get-written-number (length (car objects))))
+          (setq output-response-list (append output-response-list (list number-objects)))
+        )
+        
+        ;; Otherwise the line is in one of the forms:
+        ;; 1 - "1 Mary got the milk there."
+        ;; 2 - "2 John moved to the bedroom."
+        ;; 2 - "9 John put down the football."
+        ;; 3 - "8 Mary gave the milk to Sandra."
+        ;;
+        ;; Add information to the KB.
+        (let ((event-mt (intern (event-name-from-number event-number)))
+              (action (get-equivalent-action (nth 2 tokens)))
+              (person nil)
+              (other-person nil)
+              (place nil)
+              (object nil))
+          
+          ;; Store data in KB.
+          (kb-store (list 'isa event-mt 'Microtheory) 'TaskLocalMt)
+          (kb-store (list 'genlMt event-mt 'TaskLocalMt) 'TaskLocalMt)          
+          
+          ;; Decide which of is the form of the sentence.
+          (cond 
+           ((eql action 'MovesTo) 
+            (progn
+              (setq person (intern (add-task-prefix (nth 1 tokens))))
+              (setq place (intern (add-task-prefix (string-right-trim "." (car (last tokens))))))
+              (kb-store (list 'MovesTo person place) event-mt)
+            )
+           )
+           
+           ((or (eql action 'pickedUpObject) (eql action 'droppedObject))
+            (progn
+              (setq person (intern (add-task-prefix (nth 1 tokens))))
+              (setq object-name (string-right-trim "." (nth 4 tokens)))
+              (if (string= object-name "the")
+                (setq object-name (string-right-trim "." (nth 5 tokens)))
+              )              
+              (setq object (intern (add-task-prefix object-name)))
+              (kb-store (list action person object) event-mt)
+            )
+           )
+           
+           ((eql action 'giveTo)
+            (progn
+              (setq person (intern (add-task-prefix (nth 1 tokens))))
+              (setq object-name (string-right-trim "." (nth 4 tokens)))
+              (if (string= object-name "the")
+                (setq object-name (string-right-trim "." (nth 5 tokens)))
+              )              
+              (setq object (intern (add-task-prefix object-name)))
+              (setq other-person (intern (add-task-prefix (string-right-trim "." (nth 6 tokens)))))
+
+              
+              (kb-store (list action person other-person object) event-mt)
+            )
+           )
+           
+           (t (progn 
+                (terpri) (write "not found: ") (write (nth 2 tokens)) 
+                (write action) (terpri))
+           )
+          )
+        
+          (if previous-event
+            (kb-store (list 'happensAfter event-mt previous-event) 'TaskLocalMt)
+          )
+          
+          ;; Update previous event.
+          (setq previous-event event-mt)
+        )
+      )
+    ))
+  )
+  ;; return the list of places got from the "Where is" queries.  
   output-response-list)  
 )
 
@@ -491,6 +615,19 @@ comments|#
     )
   ) 
   comments|#
+  
+  (let ((lines (read-text-file (concatenate 'string file-root "data\\qa7_simple.txt"))))
+    (let ((output (execute-task7 lines))
+          (output-str ""))
+      (dolist (element output)
+        (setq output-str (concatenate 'string output-str 
+                                     (format nil "~s~%" element)))
+      )
+      
+      (write-text-file (concatenate 'string file-root "data\\qa7_simple.out") output-str)
+      (write "output saved to data\\qa7_simple.out")
+    )
+  )
 )
 
 ;; Executes main function.
