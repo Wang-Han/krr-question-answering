@@ -9,7 +9,7 @@
     (happensAfter ?z ?y))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Place Rules
+;;; Person Rules
     
 ;; Rule defining where a person currently is.
 ;; This considers the case only one micro-theory talks has movesTo.
@@ -43,6 +43,64 @@
                 (and (genlMt ?microtheory2 TaskLocalMt)
                      (ist-Information ?microtheory2 (MovesTo ?person ?anotherPlace))
                      (happensAfter ?microtheory2 ?microtheory1) )))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Person and Object Rules
+                     
+(<== (isHoldingObject ?person ?object)
+    (ist-Information ?microtheory1 (pickedUpObject ?person ?object))
+    (evaluate 0
+        ;; Count the number of micro-theories that happens after ?microtheory1 that the person dropped the object.
+        (CardinalityFn
+            (TheClosedRetrievalSetOf ?microtheory2
+                (and (genlMt ?microtheory2 TaskLocalMt)
+                     (ist-Information ?microtheory2 (droppedObject ?person ?object))
+                     (happensAfter ?microtheory2 ?microtheory1))))))
+                     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Object Rules                
+
+;; First case, someone is currently holding the object
+(<== (isObjectCurrentlyIn ?object ?place)
+    (isHoldingObject ?person ?object)
+    (isCurrentlyIn ?person ?place))
+
+;; Second case, nobody is holding the object, find the place someone dropped it for the last time.                      
+(<== (isObjectCurrentlyIn ?object ?place)
+    (ist-Information ?microtheory1 (droppedObject ?person ?object))
+    (ist-Information ?microtheory2 (MovesTo ?person ?place))
+    (happensAfter ?microtheory1 ?microtheory2)                     
+    (evaluate 0
+        ;; Count the number of people currently holding object.
+        (CardinalityFn
+            (TheClosedRetrievalSetOf ?anyPerson
+                (isHoldingObject ?anyPerson ?object))))
+    (evaluate 0
+        ;; Count the number of micro-theories that happens after ?microtheory1 where
+        ;; the same person dropped the object.
+        (CardinalityFn
+            (TheClosedRetrievalSetOf ?microtheory3
+                (and (genlMt ?microtheory3 TaskLocalMt)
+                     (ist-Information ?microtheory3 (droppedObject ?person ?object))
+                     (happensAfter ?microtheory3 ?microtheory1)))))
+    (evaluate 0
+        ;; Count the number of micro-theories that happens after ?microtheory1 where
+        ;; another person dropped the object.
+        (CardinalityFn
+            (TheClosedRetrievalSetOf ?microtheory3
+                (and (genlMt ?microtheory3 TaskLocalMt)
+                     (ist-Information ?microtheory3 (droppedObject ?anotherPerson ?object))
+                     (happensAfter ?microtheory3 ?microtheory1)))))
+    (evaluate 0
+        ;; Count the number of micro-theories that happens after ?microtheory2 and before
+        ;; ?microtheory1 and a person moved to another place.
+        (CardinalityFn
+            (TheClosedRetrievalSetOf ?microtheory3
+                (and (genlMt ?microtheory3 TaskLocalMt)
+                     (ist-Information ?microtheory3 (MovesTo ?person ?anotherPlace))
+                     (happensAfter ?microtheory3 ?microtheory2)
+                     (happensAfter ?microtheory1 ?microtheory3)))))
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Directions Rules

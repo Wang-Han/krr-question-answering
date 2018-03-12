@@ -35,10 +35,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Predicates
 
+;; This is only for person.
 (isa isCurrentlyIn Predicate)
 (arity isCurrentlyIn 2)
 (arg1Isa isCurrentlyIn Person)
 (arg2Isa isCurrentlyIn Place)
+
+;; This is only for objects.
+(isa isObjectCurrentlyIn Predicate)
+(arity isObjectCurrentlyIn 2)
+(arg1Isa isObjectCurrentlyIn InanimateObject)
+(arg2Isa isObjectCurrentlyIn Place)
+
+(isa isHoldingObject Predicate)
+(arity isHoldingObject 2)
+(arg1Isa isHoldingObject Person)
+(arg2Isa isHoldingObject InanimateObject)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Relations
@@ -52,6 +64,16 @@
 (arity happensAfter 2)
 (arg1Isa happensAfter Microtheory)
 (arg2Isa happensAfter Microtheory)
+
+(isa pickedUpObject Relation)
+(arity pickedUpObject 2)
+(arg1Isa pickedUpObject Person)
+(arg2Isa pickedUpObject InanimateObject)
+
+(isa droppedObject Relation)
+(arity droppedObject 2)
+(arg1Isa droppedObject Person)
+(arg2Isa droppedObject InanimateObject)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; End of Code
