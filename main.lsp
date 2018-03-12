@@ -322,7 +322,6 @@
 ;; TODO: get result of queries from companions/FIRE and write results on output
 ;; file.
 (defun main ()
-  
   (let ((lines (read-text-file (concatenate 'string file-root "data\\qa1_single-supporting-fact_test.txt"))))
     (let ((output (execute-task1 lines))
           (output-str ""))
@@ -330,7 +329,7 @@
         (setq output-str (concatenate 'string output-str 
                                      (format nil "~s~%" element)))
       )
-      writes the output-str to output file.
+      ;; writes the output-str to output file.
       (write-text-file (concatenate 'string file-root "data\\qa1_single-supporting-fact_test.out") output-str)
       (write "output saved to data\\qa1_single-supporting-fact_test.out")
     )
@@ -343,7 +342,7 @@
         (setq output-str (concatenate 'string output-str 
                                      (format nil "~s~%" element)))
       )
-      ; writes the output-str to output file.
+      ;; writes the output-str to output file.
       (write-text-file (concatenate 'string file-root "data\\qa4_two-arg-relations_test.out") output-str)
       (write "output saved to data\\qa4_two-arg-relations_test.out")
     )
@@ -356,7 +355,7 @@
         (setq output-str (concatenate 'string output-str 
                                      (format nil "~s~%" element)))
       )
-      ; writes the output-str to output file.
+      ;; writes the output-str to output file.
       (write-text-file (concatenate 'string file-root "data\\qa6_yes-no-questions_test.out") output-str)
       (write "output saved to data\\qa6_yes-no-questions_test.out")
     )
