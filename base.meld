@@ -26,6 +26,7 @@
 (isa Taskkitchen Place)
 (isa Taskoffice Place)
 (isa Taskbedroom Place)
+(isa Taskunknownplace Place)
 
 (isa Taskmilk InanimateObject)
 (isa Taskfootball InanimateObject)

@@ -5,7 +5,7 @@
 
 ;; Not sure how to user relative paths in lisp. Work with absolute paths for now.
 ;; NOTE: Remember to change that before running.
-(setq file-root "C:\\Users\\danil\\Documents\\Northwestern\\Winter 2018\\EECS 371 - NRR\\Project\\krr-question-answering\\")
+(setq file-root "C:\\Users\\Han\\Desktop\\371-KRR\\krr-question-answering\\")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Text and parsing functions
@@ -99,6 +99,7 @@
   )
 )
 
+#| comment
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Task 1 related functions
 
@@ -763,6 +764,93 @@
   output-response-list)  
 )
 
+ comment |#
+ 
+;; Task 9 related functions
+(defun execute-task9 (lines)
+  (let ((output-response-list '())
+        (previous-event nil))
+  (dolist (line lines)
+    (let ((tokens (string-split (list #\Space #\tab) line)))
+    (let ((event-number (nth 0 tokens)))
+      
+      ;; If first token is "1" clean the KB.
+      (if (string= event-number "1")
+        (progn
+          (setq previous-event nil)
+          (clean-local-mt)
+        )
+      )
+      (cond
+        ((string= (nth 1 tokens) "Is")
+          ;; The line is of the form "3 Is Sandra in the bedroom?   no  2" 
+          ;; perform a query.
+          (let ((person (add-task-prefix (nth 2 tokens)))
+                (judge-place (add-task-prefix (string-right-trim "?" (nth 5 tokens))))
+                (answer nil))
+            
+            ;; Clear working memory to prevent using old facts.
+            (clear-wm)
+            ;; For some weird reason facts in GlobalMt are being deleted.
+            ;; Loading this file again fixes the problem for now.
+            (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+            
+            (setq current-place (ask-q (list 'isCurrentlyIn (intern person) '?x)))
+            (write current-place) (terpri) (terpri) ;; TODO - Delete.
+            (setq current-place (cdr (car (car current-place))))
+            (write current-place) (terpri) (terpri)
+            (write (intern judge-place)) (terpri) (terpri)
+            (setq answer (if (eql (intern judge-place) current-place) "yes" "no"))
+            (setq output-response-list (append output-response-list (list answer)))
+          )
+        )
+        
+        ;; Otherwise the line is of the form "1 John is in the hallway." 
+        ;;                              or "7 Mary went back to the bathroom."
+        ;;                              or "4 Sandra journeyed to the bedroom.""
+        ;; Add information to the KB.
+        ((or (string= (nth 3 tokens) "to") (string= (nth 4 tokens) "to") (and (string= (nth 2 tokens) "is") (string= (nth 3 tokens) "in")))
+          (let ((event-mt (intern (event-name-from-number event-number)))
+                (person  (intern (add-task-prefix (nth 1 tokens))))
+                (place (intern (add-task-prefix (string-right-trim "." (car (last tokens)))))))
+            
+            ;; Store data in KB.
+            (kb-store (list 'isa event-mt 'Microtheory) 'TaskLocalMt)
+            (kb-store (list 'genlMt event-mt 'TaskLocalMt) 'TaskLocalMt)
+            (kb-store (list 'MovesTo person place) event-mt)
+            (if previous-event
+              (kb-store (list 'happensAfter event-mt previous-event) 'TaskLocalMt)
+            )
+          
+          ;; Update previous event.
+            (setq previous-event event-mt)
+          )
+        )
+        ;; For the line of the form "8 Sandra is no longer in the bedroom." or "11 Mary is not in the bathroom."
+        ;; Add information in KB as "MovesTo TaskSandra Taskunknownplace"
+        ((and (string= (nth 2 tokens) "is") (or (string= (nth 3 tokens) "no") (string= (nth 3 tokens) "not")))
+          (let ((event-mt (intern (event-name-from-number event-number)))
+                (person  (intern (add-task-prefix (nth 1 tokens)))))
+            
+            ;; Store data in KB.
+            (kb-store (list 'isa event-mt 'Microtheory) 'TaskLocalMt)
+            (kb-store (list 'genlMt event-mt 'TaskLocalMt) 'TaskLocalMt)
+            (kb-store (list 'MovesTo person 'Taskunknownplace) event-mt)
+            (if previous-event
+              (kb-store (list 'happensAfter event-mt previous-event) 'TaskLocalMt)
+            )
+          
+          ;; Update previous event.
+            (setq previous-event event-mt)
+          )
+        )
+      ) ;; end of cond
+    ))
+  )
+  ;; return the list of answer got from the "isCurrentlyIn" queries.  
+  output-response-list)
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; FIRE related functions 
 
@@ -884,8 +972,7 @@
       (write "output saved to data\\qa7_simple.out")
     )
   )
-  comments|#
-
+  
   (let ((lines (read-text-file (concatenate 'string file-root "data\\qa5_three-arg-relations_test.txt"))))
     (let ((output (execute-task5 lines))
         (output-str ""))
@@ -909,7 +996,20 @@
       (write "output saved to data\\qa8_simple.out")
     )
   )
+  comments|#
 
+  (let ((lines (read-text-file (concatenate 'string file-root "data\\qa9_simple-negation_test.txt"))))
+    (let ((output (execute-task9 lines))
+          (output-str ""))
+      (dolist (element output)
+        (setq output-str (concatenate 'string output-str 
+                                     (format nil "~s~%" element)))
+      )
+      ;; writes the output-str to output file.
+      (write-text-file (concatenate 'string file-root "data\\qa9_simple-negation_test.out") output-str)
+      (write "output saved to data\\qa9_simple-negation_test.out")
+    )
+  )
 )
 
 ;; Executes main function.
