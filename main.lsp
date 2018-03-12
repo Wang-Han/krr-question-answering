@@ -65,9 +65,29 @@
   (concatenate 'string direction "Of")
 )
 
+(defun get-equivalent-action (word)
+  (cond 
+   ((string= word "travelled") 'MovesTo)
+   ((string= word "moved") 'MovesTo)
+   ((string= word "went") 'MovesTo)
+   ((string= word "journeyed") 'MovesTo)
+   
+   ((string= word "picked") 'pickedUpObject)
+   ((string= word "grabbed") 'pickedUpObject)
+   ((string= word "got") 'pickedUpObject)
+   ((string= word "took") 'pickedUpObject)
+   
+   ((string= word "discarded") 'droppedObject)
+   ((string= word "put") 'droppedObject)
+   ((string= word "dropped") 'droppedObject)
+   ((string= word "left") 'droppedObject)
+  )
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Task 1 related functions
 
+#|multiline
 (defun execute-task1 (lines)
   (let ((output-response-list '())
         (previous-event nil))
@@ -123,7 +143,101 @@
   ;; return the list of places got from the "Where is" queries.  
   output-response-list)  
 )
+comments|#
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Task 2 related functions
+
+(defun execute-task2 (lines)
+  (let ((output-response-list '())
+        (previous-event nil))
+  (dolist (line lines)
+    (let ((tokens (string-split (list #\Space #\tab) line)))
+    (let ((event-number (nth 0 tokens)))
+      
+      ;; If first token is "1" clean the KB.
+      (if (string= event-number "1")
+        (progn
+          (setq previous-event nil)
+          (clean-local-mt)
+        )
+      )
+      (if (string= (nth 1 tokens) "Where")
+        ;; The line is of the form "5 Where is the milk? hallway 1 4" 
+        ;; perform a query.
+        (let ((object (intern (add-task-prefix (string-right-trim "?" (nth 4 tokens)))))
+              (current-place nil))
+          
+          ;; Clear working memory to prevent using old facts.
+          (clear-wm)
+          ;; For some weird reason facts in GlobalMt are being deleted.
+          ;; Loading this file again fixes the problem for now.
+          (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+           
+          (setq current-place (ask-q (list 'isObjectCurrentlyIn object '?x)))
+          (write current-place) (terpri) (terpri) ;; TODO - Delete.
+          (setq current-place (cdr (car (car current-place))))
+          (setq output-response-list (append output-response-list (list current-place)))
+        )
+        
+        ;; Otherwise the line is in one of the forms:
+        ;; 1 - "1 Mary got the milk there."
+        ;; 2 - "2 John moved to the bedroom."
+        ;; 2 - "9 John put down the football."
+        ;;
+        ;; Add information to the KB.
+        (let ((event-mt (intern (event-name-from-number event-number)))
+              (action (get-equivalent-action (nth 2 tokens)))
+              (person nil)
+              (place nil)
+              (object nil))
+          
+          ;; Store data in KB.
+          (kb-store (list 'isa event-mt 'Microtheory) 'TaskLocalMt)
+          (kb-store (list 'genlMt event-mt 'TaskLocalMt) 'TaskLocalMt)          
+          
+          ;; Decide which of is the form of the sentence.
+          (cond 
+           ((eql action 'MovesTo) 
+            (progn
+              (setq person (intern (add-task-prefix (nth 1 tokens))))
+              (setq place (intern (add-task-prefix (string-right-trim "." (car (last tokens))))))
+              (kb-store (list 'MovesTo person place) event-mt)
+            )
+           )
+           
+           ((or (eql action 'pickedUpObject) (eql action 'droppedObject))
+            (progn
+              (setq person (intern (add-task-prefix (nth 1 tokens))))
+              (setq object-name (string-right-trim "." (nth 4 tokens)))
+              (if (string= object-name "the")
+                (setq object-name (string-right-trim "." (nth 5 tokens)))
+              )              
+              (setq object (intern (add-task-prefix object-name)))
+              (kb-store (list action person object) event-mt)
+            )
+           )
+           (t (progn 
+                (terpri) (write "not found: ") (write (nth 2 tokens)) 
+                (write action) (terpri))
+           )
+          )
+        
+          (if previous-event
+            (kb-store (list 'happensAfter event-mt previous-event) 'TaskLocalMt)
+          )
+          
+          ;; Update previous event.
+          (setq previous-event event-mt)
+        )
+      )
+    ))
+  )
+  ;; return the list of places got from the "Where is" queries.  
+  output-response-list)  
+)
+
+#|multiline
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Task 4 related functions
 
@@ -200,6 +314,7 @@
   ;; return the list of places got from the "Where is" queries.  
   output-response-list)  
 )
+comments|#
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Task 6 related functions
@@ -322,6 +437,7 @@
 ;; TODO: get result of queries from companions/FIRE and write results on output
 ;; file.
 (defun main ()
+  #|multiline
   (let ((lines (read-text-file (concatenate 'string file-root "data\\qa1_single-supporting-fact_test.txt"))))
     (let ((output (execute-task1 lines))
           (output-str ""))
@@ -347,6 +463,20 @@
       (write "output saved to data\\qa4_two-arg-relations_test.out")
     )
   )
+  
+  (let ((lines (read-text-file (concatenate 'string file-root "data\\qa2_simple.txt"))))
+    (let ((output (execute-task2 lines))
+        (output-str ""))
+      (dolist (element output)
+        (setq output-str (concatenate 'string output-str 
+                                     (format nil "~s~%" element)))
+      )
+      
+      ;; writes the output-str to output file.
+      (write-text-file (concatenate 'string file-root "data\\qa2_simple.out") output-str)
+      (write "output saved to data\\qa2_simple.out")
+    )
+  )
 
   (let ((lines (read-text-file (concatenate 'string file-root "data\\qa6_yes-no-questions_test.txt"))))
     (let ((output (execute-task6 lines))
@@ -355,11 +485,12 @@
         (setq output-str (concatenate 'string output-str 
                                      (format nil "~s~%" element)))
       )
-      ;; writes the output-str to output file.
+      
       (write-text-file (concatenate 'string file-root "data\\qa6_yes-no-questions_test.out") output-str)
       (write "output saved to data\\qa6_yes-no-questions_test.out")
     )
   ) 
+  comments|#
 )
 
 ;; Executes main function.
