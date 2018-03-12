@@ -5,7 +5,7 @@
 
 ;; Not sure how to user relative paths in lisp. Work with absolute paths for now.
 ;; NOTE: Remember to change that before running.
-(setq file-root "C:\\Users\\danil\\Documents\\Northwestern\\Winter 2018\\EECS 371 - NRR\\Project\\krr-question-answering\\")
+(setq file-root "C:\\Users\\Han\\Desktop\\371-KRR\\krr-question-answering\\")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Text and parsing functions
@@ -317,6 +317,72 @@ comments|#
 comments|#
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Task 6 related functions
+
+(defun execute-task6 (lines)
+  (let ((output-response-list '())
+        (previous-event nil))
+  (dolist (line lines)
+    (let ((tokens (string-split (list #\Space #\tab) line)))
+    (let ((event-number (nth 0 tokens)))
+      
+      ;; If first token is "1" clean the KB.
+      (if (string= event-number "1")
+        (progn
+          (setq previous-event nil)
+          (clean-local-mt)
+        )
+      )
+      (if (string= (nth 1 tokens) "Is")
+        ;; The line is of the form "3 Is John in the kitchen?   no  2" 
+        ;; perform a query.
+        (let ((person (add-task-prefix (nth 2 tokens)))
+              (judge-place (add-task-prefix (string-right-trim "?" (nth 5 tokens))))
+              (ans nil))
+          
+          ;; Clear working memory to prevent using old facts.
+          (clear-wm)
+          ;; For some weird reason facts in GlobalMt are being deleted.
+          ;; Loading this file again fixes the problem for now.
+          (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+          
+          (setq current-place (ask-q (list 'isCurrentlyIn (intern person) '?x)))
+          (write current-place) (terpri) (terpri) ;; TODO - Delete.
+          (setq current-place (cdr (car (car current-place))))
+          (write current-place) (terpri) (terpri)
+          (write (intern judge-place)) (terpri) (terpri)
+          (setq answer (if (eql (intern judge-place) current-place) "yes" "no"))
+          (setq output-response-list (append output-response-list (list answer)))
+        )
+        
+        ;; Otherwise the line is of the form "2 John moved to the bedroom." or "1 Daniel went back to the kitchen."
+        ;; Skip the line with the information about "picked up" or "discarded".
+        ;; Add information to the KB.
+        (if (or (string= (nth 3 tokens) "to") (string= (nth 4 tokens) "to"))
+          (let ((event-mt (intern (event-name-from-number event-number)))
+                (person  (intern (add-task-prefix (nth 1 tokens))))
+                (place (intern (add-task-prefix (string-right-trim "." (car (last tokens)))))))
+            
+            ;; Store data in KB.
+            (kb-store (list 'isa event-mt 'Microtheory) 'TaskLocalMt)
+            (kb-store (list 'genlMt event-mt 'TaskLocalMt) 'TaskLocalMt)
+            (kb-store (list 'MovesTo person place) event-mt)
+            (if previous-event
+              (kb-store (list 'happensAfter event-mt previous-event) 'TaskLocalMt)
+            )
+          
+          ;; Update previous event.
+            (setq previous-event event-mt)
+          )
+        )
+      )
+    ))
+  )
+  ;; return the list of answer got from the "isCurrentlyIn" queries.  
+  output-response-list)  
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; FIRE related functions 
 
 ;; NOTE: following FIRE functions only works on companions shell - 
@@ -384,7 +450,7 @@ comments|#
       (write "output saved to data\\qa1_single-supporting-fact_test.out")
     )
   )
-  
+
   (let ((lines (read-text-file (concatenate 'string file-root "data\\qa4_two-arg-relations_test.txt"))))
     (let ((output (execute-task4 lines))
           (output-str ""))
@@ -397,19 +463,34 @@ comments|#
       (write "output saved to data\\qa4_two-arg-relations_test.out")
     )
   )
-  comments|#
+  
   (let ((lines (read-text-file (concatenate 'string file-root "data\\qa2_simple.txt"))))
     (let ((output (execute-task2 lines))
-          (output-str ""))
+        (output-str ""))
       (dolist (element output)
         (setq output-str (concatenate 'string output-str 
                                      (format nil "~s~%" element)))
       )
+      
       ;; writes the output-str to output file.
       (write-text-file (concatenate 'string file-root "data\\qa2_simple.out") output-str)
       (write "output saved to data\\qa2_simple.out")
     )
   )
+
+  (let ((lines (read-text-file (concatenate 'string file-root "data\\qa6_yes-no-questions_test.txt"))))
+    (let ((output (execute-task6 lines))
+          (output-str ""))
+      (dolist (element output)
+        (setq output-str (concatenate 'string output-str 
+                                     (format nil "~s~%" element)))
+      )
+      
+      (write-text-file (concatenate 'string file-root "data\\qa6_yes-no-questions_test.out") output-str)
+      (write "output saved to data\\qa6_yes-no-questions_test.out")
+    )
+  ) 
+  comments|#
 )
 
 ;; Executes main function.
