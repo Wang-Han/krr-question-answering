@@ -47,7 +47,7 @@
    ))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Task 1 related functions
+;; Task related functions
 
 ;; Adds a task prefix to the string, we should do that for name of people, places
 ;; and objects since they might collide with existing data in the KB.
@@ -60,43 +60,19 @@
   (concatenate 'string "Event" event-number "Mt")
 )
 
-;; Add entites (Person and Places) into KB
-(defun add-entities (lines)  
-  ;; TODO: When cleaning the 'TaskLocalMt we were also removing entities.
-  ;; Now we are adding them to 'TaskGlobalMt but that's not the best solution
-  ;; If we are running multiple tasks.
-  (let ((persons-seen-list '())
-          (places-seen-list '()))
-    (dolist (line lines)
-      (let ((tokens (string-split (list #\Space) line)))
-        (if (string/= (cadr tokens) "Where")
-          (let ((person (intern (add-task-prefix (cadr tokens))))
-                (place (intern (add-task-prefix (string-right-trim "." (car (last tokens)))))))
-            (if (not (member person persons-seen-list))
-              (progn
-                (kb-store (list 'isa person 'Person) 'TaskGlobalMt)
-                (setq persons-seen-list (append persons-seen-list (list person)))
-              )
-            )
-            (if (not (member place places-seen-list))
-              (progn
-                (kb-store (list 'isa place 'Place) 'TaskGlobalMt)
-                (setq places-seen-list (append places-seen-list (list place)))
-              )
-            )
-          )
-        )
-      )
-    )
-  )
+;; Changes name of direction to match KB, e.g. "north" to "northOf".
+(defun add-direction-suffix (direction)
+  (concatenate 'string direction "Of")
 )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Task 1 related functions
+
 (defun execute-task1 (lines)
-  (add-entities lines)
   (let ((output-response-list '())
         (previous-event nil))
   (dolist (line lines)
-    (let ((tokens (string-split (list #\Space) line)))
+    (let ((tokens (string-split (list #\Space #\tab) line)))
     (let ((event-number (nth 0 tokens)))
       
       ;; If first token is "1" clean the KB.
@@ -112,7 +88,7 @@
         (let ((person (add-task-prefix (string-right-trim "?" (nth 3 tokens))))
               (current-place nil))
           
-          ;; Clear working memory to prevent using old isCurrentlyIn facts.
+          ;; Clear working memory to prevent using old facts.
           (clear-wm)
           ;; For some weird reason facts in GlobalMt are being deleted.
           ;; Loading this file again fixes the problem for now.
@@ -148,6 +124,82 @@
   output-response-list)  
 )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Task 4 related functions
+
+(defun execute-task4 (lines)
+  (let ((output-response-list '())
+        (previous-event nil))
+  (dolist (line lines)
+    (let ((tokens (string-split (list #\Space #\tab) line)))
+    (let ((event-number (nth 0 tokens)))
+      
+      ;; If first token is "1" clean the KB.
+      (if (string= event-number "1")
+        (progn
+          (setq previous-event nil)
+          (clean-local-mt)
+        )
+      )
+      (if (string= (nth 1 tokens) "What")
+        ;; The line has two forms: 
+        ;;      1 - "3 What is the bathroom east of?	bedroom	2" 
+        ;;      2 - "3 What is west of the kitchen?	bedroom	1" 
+        ;; perform a query.
+        (let ((place nil)
+              (direction nil)
+              (answer nil))
+          
+          ;; Clear working memory to prevent using old facts.
+          (clear-wm)
+          ;; For some weird reason facts in GlobalMt are being deleted.
+          ;; Loading this file again fixes the problem for now.
+          (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+          
+          (if (string= (nth 3 tokens) "the")
+            ;; First question format
+            (progn
+              (setq place (intern (add-task-prefix (nth 4 tokens))))
+              (setq direction (intern (add-direction-suffix (nth 5 tokens))))
+              (setq answer (ask-q (list direction place '?x)))
+            )
+            ;; else, second format
+            (progn
+              (setq place (intern (add-task-prefix (string-right-trim "?" (nth 6 tokens)))))
+              (setq direction (intern (add-direction-suffix (nth 3 tokens))))
+              (setq answer (ask-q (list direction '?x place)))
+            )
+          )
+          
+          (write answer) (terpri) (terpri) ;; TODO - Delete.
+          (setq answer (cdr (car (car answer))))
+          (setq output-response-list (append output-response-list (list answer)))
+        )
+        
+        ;; Otherwise the line is of the form "1 The hallway is east of the bathroom."
+        ;; Add information to the KB.
+        (let ((event-mt (intern (event-name-from-number event-number)))
+              (place1  (intern (add-task-prefix (nth 2 tokens))))
+              (direction  (intern (add-direction-suffix (nth 4 tokens))))
+              (place2 (intern (add-task-prefix (string-right-trim "." (car (last tokens)))))))
+          
+          ;; Store data in KB.
+          (kb-store (list 'isa event-mt 'Microtheory) 'TaskLocalMt)
+          (kb-store (list 'genlMt event-mt 'TaskLocalMt) 'TaskLocalMt)
+          (kb-store (list direction place1 place2) event-mt)
+          (if previous-event
+            (kb-store (list 'happensAfter event-mt previous-event) 'TaskLocalMt)
+          )
+          
+          ;; Update previous event.
+          (setq previous-event event-mt)
+        )
+      )
+    ))
+  )
+  ;; return the list of places got from the "Where is" queries.  
+  output-response-list)  
+)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; FIRE related functions 
 
@@ -203,16 +255,29 @@
 ;; TODO: get result of queries from companions/FIRE and write results on output
 ;; file.
 (defun main ()
-  (let ((lines (read-text-file (concatenate 'string file-root "qa1_single-supporting-fact_test.txt"))))
+  (let ((lines (read-text-file (concatenate 'string file-root "data\\qa1_single-supporting-fact_test.txt"))))
     (let ((output (execute-task1 lines))
           (output-str ""))
       (dolist (element output)
         (setq output-str (concatenate 'string output-str 
                                      (format nil "~s~%" element)))
       )
-      ;; writes the output-str to output file.
-      (write-text-file (concatenate 'string file-root "out.txt") output-str)
-      (write "ouput saved to out.txt")
+      writes the output-str to output file.
+      (write-text-file (concatenate 'string file-root "data\\qa1_single-supporting-fact_test.out") output-str)
+      (write "output saved to data\\qa1_single-supporting-fact_test.out")
+    )
+  )
+  
+  (let ((lines (read-text-file (concatenate 'string file-root "data\\qa4_two-arg-relations_test.txt"))))
+    (let ((output (execute-task4 lines))
+          (output-str ""))
+      (dolist (element output)
+        (setq output-str (concatenate 'string output-str 
+                                     (format nil "~s~%" element)))
+      )
+      ; writes the output-str to output file.
+      (write-text-file (concatenate 'string file-root "data\\qa4_two-arg-relations_test.out") output-str)
+      (write "output saved to data\\qa4_two-arg-relations_test.out")
     )
   )
 )
