@@ -103,6 +103,22 @@
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Last give Rules : find the last happened microtheory with giveTo
+;;; For the query like "Who gave the apple?" or "Who received the apple?"                
+
+(<== (lastGiveTo ?give-person ?receive-person ?give-object)
+    (genlMt ?microtheory1 TaskLocalMt)
+    (ist-Information ?microtheory1 (giveTo ?give-person ?receive-person ?give-object))
+    (evaluate 0
+        ;; Count the number of micro-theories that happens after ?microtheory1.
+        (CardinalityFn
+            (TheClosedRetrievalSetOf ?microtheory2
+                (and (genlMt ?microtheory2 TaskLocalMt)
+                     (ist-Information ?microtheory2 (giveTo ?give-person2 ?receive-person2 ?give-object))
+                     (happensAfter ?microtheory2 ?microtheory1) ))))
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Directions Rules
 
 ;; symmetrical relations

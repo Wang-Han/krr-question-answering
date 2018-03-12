@@ -81,6 +81,10 @@
    ((string= word "put") 'droppedObject)
    ((string= word "dropped") 'droppedObject)
    ((string= word "left") 'droppedObject)
+
+   ((string= word "gave") 'giveTo)
+   ((string= word "handed") 'giveTo)
+   ((string= word "passed") 'giveTo)
   )
 )
 
@@ -257,8 +261,8 @@ comments|#
       )
       (if (string= (nth 1 tokens) "What")
         ;; The line has two forms: 
-        ;;      1 - "3 What is the bathroom east of?	bedroom	2" 
-        ;;      2 - "3 What is west of the kitchen?	bedroom	1" 
+        ;;      1 - "3 What is the bathroom east of?  bedroom 2" 
+        ;;      2 - "3 What is west of the kitchen? bedroom 1" 
         ;; perform a query.
         (let ((place nil)
               (direction nil)
@@ -315,6 +319,149 @@ comments|#
   output-response-list)  
 )
 comments|#
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Task 5 related functions
+
+(defun execute-task5 (lines)
+  (let ((output-response-list '())
+        (previous-event nil))
+  (dolist (line lines)
+    (let ((tokens (string-split (list #\Space #\tab) line)))
+    (let ((event-number (nth 0 tokens)))
+      
+      ;; If first token is "1" clean the KB.
+      (if (string= event-number "1")
+        (progn
+          (setq previous-event nil)
+          (clean-local-mt)
+        )
+      )
+      (cond
+        ((string= (nth 1 tokens) "What")
+          ;; The line is of the form "9 What did Fred give to Jeff? football 8" 
+          ;; perform a query.
+          (let ((give-person (add-task-prefix (nth 3 tokens)))
+                (receive-person (add-task-prefix (string-right-trim "?" (nth 6 tokens)))))
+            
+            ;; Clear working memory to prevent using old facts.
+            (clear-wm)
+            ;; For some weird reason facts in GlobalMt are being deleted.
+            ;; Loading this file again fixes the problem for now.
+            (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+            
+            (setq give-object (ask-q (list 'giveTo (intern give-person) (intern receive-person) '?x)))
+            (write give-object) (terpri) (terpri) ;; TODO - Delete.
+            (setq give-object (cdr (car (car give-object))))
+            (write give-object) (terpri) (terpri) ;; TODO - Delete.
+            (setq output-response-list (append output-response-list (list give-object)))
+          )
+        )
+        ((and (string= (nth 1 tokens) "Who") (string= (nth 2 tokens) "did"))
+          ;; The line is of the form "12 Who did Fred give the football to?" 
+          ;; perform a query.
+          (let ((give-person (add-task-prefix (nth 3 tokens)))
+                (give-object (add-task-prefix (nth 6 tokens))))
+            
+            ;; Clear working memory to prevent using old facts.
+            (clear-wm)
+            ;; For some weird reason facts in GlobalMt are being deleted.
+            ;; Loading this file again fixes the problem for now.
+            (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+            
+            (setq receive-person (ask-q (list 'giveTo (intern give-person) '?x (intern give-object))))
+            (write receive-person) (terpri) (terpri) ;; TODO - Delete.
+            (setq receive-person (cdr (car (car receive-person))))
+            (write receive-person) (terpri) (terpri) ;; TODO - Delete.
+            (setq output-response-list (append output-response-list (list receive-person)))
+          )
+        )
+        ((and (string= (nth 1 tokens) "Who") (string= (nth 5 tokens) "to"))
+          ;; The line is of the form "6 Who gave the football to Jeff?" 
+          ;; perform a query.
+          (let ((give-object (add-task-prefix (nth 4 tokens)))
+                (receive-person (add-task-prefix (string-right-trim "?" (nth 6 tokens)))))
+            
+            ;; Clear working memory to prevent using old facts.
+            (clear-wm)
+            ;; For some weird reason facts in GlobalMt are being deleted.
+            ;; Loading this file again fixes the problem for now.
+            (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+            
+            (setq give-person (ask-q (list 'giveTo '?x (intern receive-person) (intern give-object))))
+            (write give-person) (terpri) (terpri) ;; TODO - Delete.
+            (setq give-person (cdr (car (car give-person))))
+            (write give-person) (terpri) (terpri) ;; TODO - Delete.
+            (setq output-response-list (append output-response-list (list give-person)))
+          )
+        )
+        ((and (string= (nth 1 tokens) "Who") (string= (nth 2 tokens) "gave"))
+          ;; The line is of the form "7 Who gave the apple?" 
+          ;; perform a query.
+          (let ((give-object (add-task-prefix (string-right-trim "?" (nth 4 tokens)))))
+            
+            ;; Clear working memory to prevent using old facts.
+            (clear-wm)
+            ;; For some weird reason facts in GlobalMt are being deleted.
+            ;; Loading this file again fixes the problem for now.
+            (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+            
+            (setq give-person (ask-q (list 'lastGiveTo '?x '?y (intern give-object))))
+            (write give-person) (terpri) (terpri) ;; TODO - Delete.
+            (setq give-person (cdr (car (last (car give-person)))))
+            (write give-person) (terpri) (terpri) ;; TODO - Delete.
+            (setq output-response-list (append output-response-list (list give-person)))
+          )
+        )
+        ((and (string= (nth 1 tokens) "Who") (string= (nth 2 tokens) "received"))
+          ;; The line is of the form "19 Who received the apple?" 
+          ;; perform a query.
+          (let ((give-object (add-task-prefix (string-right-trim "?" (nth 4 tokens)))))
+            
+            ;; Clear working memory to prevent using old facts.
+            (clear-wm)
+            ;; For some weird reason facts in GlobalMt are being deleted.
+            ;; Loading this file again fixes the problem for now.
+            (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+            
+            (setq receive-person (ask-q (list 'lastGiveTo '?x '?y (intern give-object))))
+            (write receive-person) (terpri) (terpri) ;; TODO - Delete.
+            (setq receive-person (cdr (car (car receive-person))))
+            (write receive-person) (terpri) (terpri) ;; TODO - Delete.
+            (setq output-response-list (append output-response-list (list receive-person)))
+          )
+        )
+        ;; Otherwise the line is of the form "2 Fred gave the football to Jeff." 
+        ;;                              or "8 Fred handed the football to Jeff."
+        ;;                              or "12 Mary passed the milk to Bill."
+        ;; Skip the line with the information about "picked up" or "discarded".
+        ;; Add information to the KB.
+        ((eql (get-equivalent-action (nth 2 tokens)) 'giveTo)
+          (let ((event-mt (intern (event-name-from-number event-number)))
+                (give-person (intern (add-task-prefix (nth 1 tokens))))
+                (give-object (intern (add-task-prefix (nth 4 tokens))))
+                (receive-person (intern (add-task-prefix (string-right-trim "." (car (last tokens)))))))
+            
+            ;; Store data in KB.
+            (kb-store (list 'isa event-mt 'Microtheory) 'TaskLocalMt)
+            (kb-store (list 'genlMt event-mt 'TaskLocalMt) 'TaskLocalMt)
+            (kb-store (list 'giveTo give-person receive-person give-object) event-mt)
+            (if previous-event
+              (kb-store (list 'happensAfter event-mt previous-event) 'TaskLocalMt)
+            )
+            
+          ;; Update previous event.
+            (setq previous-event event-mt)
+          )
+        )
+
+      )  ;; end of cond
+    )
+    )
+  )
+  ;; return the list of answer got from the "isCurrentlyIn" queries.  
+  output-response-list) 
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Task 6 related functions
@@ -479,7 +626,7 @@ comments|#
   )
 
   (let ((lines (read-text-file (concatenate 'string file-root "data\\qa6_yes-no-questions_test.txt"))))
-    (let ((output (execute-task6 lines))
+    (let ((output (execute-task5 lines))
           (output-str ""))
       (dolist (element output)
         (setq output-str (concatenate 'string output-str 
@@ -491,6 +638,18 @@ comments|#
     )
   ) 
   comments|#
+  (let ((lines (read-text-file (concatenate 'string file-root "data\\qa5_three-arg-relations_test.txt"))))
+    (let ((output (execute-task5 lines))
+          (output-str ""))
+      (dolist (element output)
+        (setq output-str (concatenate 'string output-str 
+                                     (format nil "~s~%" element)))
+      )
+      
+      (write-text-file (concatenate 'string file-root "data\\qa5_three-arg-relations_test.out") output-str)
+      (write "output saved to data\\qa5_three-arg-relations_test.out")
+    )
+  ) 
 )
 
 ;; Executes main function.
