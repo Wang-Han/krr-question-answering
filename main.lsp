@@ -99,7 +99,6 @@
   )
 )
 
-#| comment
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Task 1 related functions
 
@@ -764,7 +763,6 @@
   output-response-list)  
 )
 
- comment |#
  
 ;; Task 9 related functions
 (defun execute-task9 (lines)
@@ -906,7 +904,6 @@
 ;; TODO: get result of queries from companions/FIRE and write results on output
 ;; file.
 (defun main ()
-  #|multiline
   (let ((lines (read-text-file (concatenate 'string file-root "data\\qa1_single-supporting-fact_test.txt"))))
     (let ((output (execute-task1 lines))
           (output-str ""))
@@ -996,7 +993,6 @@
       (write "output saved to data\\qa8_simple.out")
     )
   )
-  comments|#
 
   (let ((lines (read-text-file (concatenate 'string file-root "data\\qa9_simple-negation_test.txt"))))
     (let ((output (execute-task9 lines))
