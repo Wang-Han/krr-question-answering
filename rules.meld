@@ -1,12 +1,15 @@
 (in-microtheory TaskGlobalMt)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Rules
+;;; Event Rules
 
 ;; Happens after transitivity.
 (<== (happensAfter ?z ?x)
     (happensAfter ?y ?x)
     (happensAfter ?z ?y))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Place Rules
     
 ;; Rule defining where a person currently is.
 ;; This considers the case only one micro-theory talks has movesTo.
@@ -41,6 +44,22 @@
                      (ist-Information ?microtheory2 (MovesTo ?person ?anotherPlace))
                      (happensAfter ?microtheory2 ?microtheory1) )))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Directions Rules
+
+;; symmetrical relations
+(<== (northOf ?x ?y)
+    (southOf ?y ?x))
+    
+(<== (southOf ?x ?y)
+    (northOf ?y ?x))
+
+(<== (westOf ?x ?y)
+    (eastOf ?y ?x))
+
+(<== (eastOf ?x ?y)
+    (westOf ?y ?x))
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Logic Rules
 

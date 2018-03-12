@@ -6,6 +6,33 @@
   "Task1Mt is a microtheory for testing task related questions.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Entities
+  
+(isa TaskMary Person)
+(isa TaskSandra Person)
+(isa TaskJohn Person)
+(isa TaskDaniel Person)
+(isa TaskFred Person)
+(isa TaskBill Person)
+(isa TaskJeff Person)
+(isa TaskJulie Person)
+
+(isa Taskcinema Place)
+(isa Taskpark Place)
+(isa Taskschool Place)
+(isa Taskbathroom Place)
+(isa Taskgarden Place)
+(isa Taskhallway Place)
+(isa Taskkitchen Place)
+(isa Taskoffice Place)
+(isa Taskbedroom Place)
+
+(isa Taskmilk InanimateObject)
+(isa Taskfootball InanimateObject)
+(isa Taskapple InanimateObject)
+(isa Taskcake InanimateObject)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Predicates
 
 (isa isCurrentlyIn Predicate)

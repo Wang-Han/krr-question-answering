@@ -349,7 +349,7 @@
     )
   )
 
-  (let ((lines (read-text-file (concatenate 'string file-root "data\\qa6_simple.txt"))))
+  (let ((lines (read-text-file (concatenate 'string file-root "data\\qa6_yes-no-questions_test.txt"))))
     (let ((output (execute-task6 lines))
           (output-str ""))
       (dolist (element output)
@@ -357,8 +357,8 @@
                                      (format nil "~s~%" element)))
       )
       ; writes the output-str to output file.
-      (write-text-file (concatenate 'string file-root "data\\qa6_simple.out") output-str)
-      (write "output saved to data\\qa6_simple.out")
+      (write-text-file (concatenate 'string file-root "data\\qa6_yes-no-questions_test.out") output-str)
+      (write "output saved to data\\qa6_yes-no-questions_test.out")
     )
   ) 
 )
