@@ -46,7 +46,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Person and Object Rules
-                     
+
+;; First case, person picked up the object and and didn't drop or gave it.                     
 (<== (isHoldingObject ?person ?object)
     (ist-Information ?microtheory1 (pickedUpObject ?person ?object))
     (evaluate 0
@@ -55,7 +56,35 @@
             (TheClosedRetrievalSetOf ?microtheory2
                 (and (genlMt ?microtheory2 TaskLocalMt)
                      (ist-Information ?microtheory2 (droppedObject ?person ?object))
+                     (happensAfter ?microtheory2 ?microtheory1)))))
+    (evaluate 0
+        ;; Count the number of micro-theories that happens after ?microtheory1 that the person gave the object
+        ;; to another person.
+        (CardinalityFn
+            (TheClosedRetrievalSetOf ?microtheory2
+                (and (genlMt ?microtheory2 TaskLocalMt)
+                     (ist-Information ?microtheory2 (giveTo ?person ?anotherPerson ?object))
                      (happensAfter ?microtheory2 ?microtheory1))))))
+
+;; Second case, person was given the object and and didn't drop or gave it.
+(<== (isHoldingObject ?person ?object)
+    (ist-Information ?microtheory1 (giveTo ?anyPerson ?person ?object))
+    (evaluate 0
+        ;; Count the number of micro-theories that happens after ?microtheory1 that the person dropped the object.
+        (CardinalityFn
+            (TheClosedRetrievalSetOf ?microtheory2
+                (and (genlMt ?microtheory2 TaskLocalMt)
+                     (ist-Information ?microtheory2 (droppedObject ?person ?object))
+                     (happensAfter ?microtheory2 ?microtheory1)))))
+    (evaluate 0
+        ;; Count the number of micro-theories that happens after ?microtheory1 that the person gave the object
+        ;; to another person.
+        (CardinalityFn
+            (TheClosedRetrievalSetOf ?microtheory2
+                (and (genlMt ?microtheory2 TaskLocalMt)
+                     (ist-Information ?microtheory2 (giveTo ?person ?anotherPerson ?object))
+                     (happensAfter ?microtheory2 ?microtheory1))))))
+                     
                      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Object Rules                
