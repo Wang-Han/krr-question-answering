@@ -53,5 +53,11 @@
 (arg1Isa happensAfter Microtheory)
 (arg2Isa happensAfter Microtheory)
 
+(isa giveTo Relation)
+(arity giveTo 3)
+(arg1Isa giveTo Person)
+(arg2Isa giveTo Person)
+(arg3Isa giveTo InanimateObject)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; End of Code
