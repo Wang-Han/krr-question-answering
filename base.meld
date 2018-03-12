@@ -53,6 +53,12 @@
 (arg1Isa isHoldingObject Person)
 (arg2Isa isHoldingObject InanimateObject)
 
+(isa lastGiveTo Relation)
+(arity lastGiveTo 3)
+(arg1Isa lastGiveTo Person)
+(arg2Isa lastGiveTo Person)
+(arg3Isa lastGiveTo InanimateObject)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Relations
 
