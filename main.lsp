@@ -504,8 +504,6 @@
   output-response-list)  
 )
 
-comments|#
-
 ;; Task 8 related functions
 
 (defun execute-task8 (lines)
@@ -623,6 +621,107 @@ comments|#
   output-response-list)  
 )
 
+comments|#
+
+;; Task 10 related functions
+(defun execute-task10 (lines)
+  (let ((output-response-list '())
+        (previous-event nil))
+  (dolist (line lines)
+    (let ((tokens (string-split (list #\Space #\tab) line)))
+    (let ((event-number (nth 0 tokens)))
+      
+      ;; If first token is "1" clean the KB.
+      (if (string= event-number "1")
+        (progn
+          (setq previous-event nil)
+          (clean-local-mt)
+        )
+      )
+      (if (string= (nth 1 tokens) "Is")
+        ;; The line is of the form "6 Is Bill in the bedroom? yes 4" 
+        ;; perform a query.
+        (let ((person (intern (add-task-prefix (nth 2 tokens))))
+              (judge-place (intern (add-task-prefix (string-right-trim "?" (nth 5 tokens)))))
+              (current-places nil)
+              (places-list nil)
+              (answer nil))
+          
+          ;; Clear working memory to prevent using old facts.
+          (clear-wm)
+          ;; For some weird reason facts in GlobalMt are being deleted.
+          ;; Loading this file again fixes the problem for now.
+          (fire::meld-file->kb (concatenate 'string file-root "rules.meld"))
+          
+          (setq current-places (ask-q (list 'isCurrentlyIn person '?x)))
+          (write judge-place) (terpri)
+          (write current-places) (terpri) ;; TODO - Delete.
+          ;; Create a list of places from query answer.
+          (setq places-list '())
+          (dolist (el current-places) (setq places-list (append places-list (list (cdr (car el)))))) 
+          (write places-list) (terpri) (terpri)
+          ;; Get the actual answer.
+          (setq answer
+           (cond
+             ((not (find judge-place places-list)) "no") 
+             ((eql (length places-list) 1) "yes")
+             (t "maybe")
+            )
+          )
+          ;; TODO Delete (write)
+          (write (find judge-place places-list)) (terpri)
+          (write (not (find judge-place places-list))) (terpri)
+          (write answer) (terpri)
+          (setq output-response-list (append output-response-list (list answer)))
+        )
+        
+        ;; Otherwise the line is of the form 
+        ;; 1 - "4 Bill journeyed to the bedroom."
+        ;; 2 - "1 Mary is in the school."
+        ;; 3 - "8 Bill is either in the school or the office."
+        ;; Add information to the KB.
+        (let ((event-mt (intern (event-name-from-number event-number)))
+              (person  (intern (add-task-prefix (nth 1 tokens))))
+              (place nil)
+              (anotherPlace nil))
+            
+          ;; Store data in KB.
+          (kb-store (list 'isa event-mt 'Microtheory) 'TaskLocalMt)
+          (kb-store (list 'genlMt event-mt 'TaskLocalMt) 'TaskLocalMt)
+          
+          (cond 
+           ;; Case #1 and #2
+           ((or (not (string= (nth 2 tokens) "is")) (string= (nth 3 tokens) "in"))
+            (setq place (intern (add-task-prefix (string-right-trim "." (car (last tokens))))))
+            (kb-store (list 'MovesTo person place) event-mt)
+           )
+           ;; Case #3
+           (t
+            (setq place (intern (add-task-prefix (nth 6 tokens))))
+            (setq anotherPlace (intern (add-task-prefix (string-right-trim "." (car (last tokens))))))
+            ;; Notice this works because we are adding 'MovesTo info in the same mt.
+            (kb-store (list 'MovesTo person place) event-mt)
+            (kb-store (list 'MovesTo person anotherPlace) event-mt)
+           )
+          )
+            
+          (if previous-event
+            (kb-store (list 'happensAfter event-mt previous-event) 'TaskLocalMt)
+          )
+          
+            ;; Update previous event.
+          (setq previous-event event-mt)
+        )
+      )
+    ))
+  )
+  ;; return the list of answer got from the queries.  
+  output-response-list)
+)  
+  
+  
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; FIRE related functions 
 
@@ -638,7 +737,7 @@ comments|#
 ;; Query fire from companions command line. 
 ;; We should normally use this one since it supports inference.
 (defun ask-q (query)
-  (write query) (terpri) (list (list (list 'x 'place))) ;; TODO: delete this.
+  (write query) (terpri) (list (list (cons 'x 'place))) ;; TODO: delete this.
   (fire::q query :context :all :response :bindings)
 )
 
@@ -744,7 +843,6 @@ comments|#
       (write "output saved to data\\qa7_simple.out")
     )
   )
-  comments|#
 
   (let ((lines (read-text-file (concatenate 'string file-root "data\\qa8_simple.txt"))))
     (let ((output (execute-task8 lines))
@@ -756,6 +854,21 @@ comments|#
       
       (write-text-file (concatenate 'string file-root "data\\qa8_simple.out") output-str)
       (write "output saved to data\\qa8_simple.out")
+    )
+  )
+  
+  comments|#
+  
+  (let ((lines (read-text-file (concatenate 'string file-root "data\\qa10_simple.txt"))))
+    (let ((output (execute-task10 lines))
+          (output-str ""))
+      (dolist (element output)
+        (setq output-str (concatenate 'string output-str 
+                                     (format nil "~s~%" element)))
+      )
+      
+      (write-text-file (concatenate 'string file-root "data\\qa10_simple.out") output-str)
+      (write "output saved to data\\qa10_simple.out")
     )
   )
   

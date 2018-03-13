@@ -1,0 +1,60 @@
+1 Mary is in the school.
+2 Bill is in the kitchen.
+3 Is Bill in the bedroom? 	no	2
+4 Bill journeyed to the bedroom.
+5 Fred travelled to the cinema.
+6 Is Bill in the bedroom? 	yes	4
+7 Fred went back to the park.
+8 Bill is either in the school or the office.
+9 Is Bill in the park? 	no	8
+10 Mary went to the cinema.
+11 Julie is either in the school or the office.
+12 Is Fred in the park? 	yes	7
+13 Julie is either in the park or the school.
+14 Bill went back to the office.
+15 Is Bill in the office? 	yes	14
+1 Fred journeyed to the office.
+2 Fred went back to the cinema.
+3 Is Fred in the office? 	no	2
+4 Julie is either in the school or the office.
+5 Julie moved to the cinema.
+6 Is Julie in the cinema? 	yes	5
+7 Julie is either in the kitchen or the bedroom.
+8 Julie journeyed to the school.
+9 Is Julie in the school? 	yes	8
+10 Bill is either in the bedroom or the school.
+11 Bill went to the bedroom.
+12 Is Bill in the office? 	no	11
+13 Julie journeyed to the park.
+14 Mary travelled to the school.
+15 Is Julie in the park? 	yes	13
+1 Bill is in the kitchen.
+2 Julie is either in the school or the cinema.
+3 Is Bill in the bedroom? 	no	1
+4 Fred is in the bedroom.
+5 Bill is in the school.
+6 Is Julie in the bedroom? 	no	2
+7 Julie is either in the bedroom or the office.
+8 Fred is in the park.
+9 Is Julie in the bedroom? 	maybe	7
+10 Fred is either in the school or the bedroom.
+11 Mary went to the kitchen.
+12 Is Bill in the school? 	yes	5
+13 Julie is either in the kitchen or the bedroom.
+14 Julie is in the school.
+15 Is Julie in the school? 	yes	14
+1 Julie journeyed to the bedroom.
+2 Julie travelled to the park.
+3 Is Julie in the kitchen? 	no	2
+4 Fred is either in the office or the kitchen.
+5 Julie travelled to the bedroom.
+6 Is Julie in the bedroom? 	yes	5
+7 Julie moved to the office.
+8 Mary is either in the office or the kitchen.
+9 Is Julie in the kitchen? 	no	7
+10 Bill is in the kitchen.
+11 Bill is either in the bedroom or the park.
+12 Is Mary in the kitchen? 	maybe	8
+13 Fred is either in the bedroom or the bedroom.
+14 Julie went to the bedroom.
+15 Is Mary in the kitchen? 	maybe	8

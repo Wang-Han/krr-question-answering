@@ -9,7 +9,7 @@ for line in test_content:
         test.append("Task" + tokens[-2])
     
 output = ""
-with open("out.txt", mode="r", encoding="utf-8") as f:
+with open("qa1_single-supporting-fact_test.out", mode="r", encoding="utf-8") as f:
 	output = f.readlines()
 
 error_counter = 0
