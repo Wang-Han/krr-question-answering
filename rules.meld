@@ -131,6 +131,30 @@
                      (happensAfter ?microtheory1 ?microtheory3)))))
 )
 
+;; For the query : Where was the apple before the bathroom? 
+(<== (wasInPlaceBefore ?object ?place ?placeBefore)
+    (ist-Information ?microtheory1 (wasObjectIn ?object ?place))
+    (ist-Information ?microtheory2 (wasObjectIn ?object ?placeBefore))
+    (happensAfter ?microtheory1 ?microtheory2)
+    (evaluate 0
+        ;; Count the number of micro-theories that happens after ?microtheory1 where
+        ;; the same object in the same place.
+        (CardinalityFn
+            (TheClosedRetrievalSetOf ?microtheory3
+                (and (genlMt ?microtheory3 TaskLocalMt)
+                     (ist-Information ?microtheory3 (wasObjectIn ?object ?place))
+                     (happensAfter ?microtheory3 ?microtheory1)))))
+    (evaluate 0
+        ;; Count the number of micro-theories that happens between ?microtheory2 and ?microtheory1 where
+        ;; the same object in someplace else.
+        (CardinalityFn
+            (TheClosedRetrievalSetOf ?microtheory3
+                (and (genlMt ?microtheory3 TaskLocalMt)
+                     (ist-Information ?microtheory3 (wasObjectIn ?object ?anotherplace))
+                     (happensAfter ?microtheory3 ?microtheory2)
+                     (happensAfter ?microtheory1 ?microtheory3)))))
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Last give Rules : find the last happened microtheory with giveTo
 ;;; For the query like "Who gave the apple?" or "Who received the apple?"                
