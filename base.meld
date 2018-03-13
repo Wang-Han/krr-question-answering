@@ -26,6 +26,7 @@
 (isa Taskkitchen Place)
 (isa Taskoffice Place)
 (isa Taskbedroom Place)
+(isa Taskunknownplace Place)
 
 (isa Taskmilk InanimateObject)
 (isa Taskfootball InanimateObject)
@@ -51,6 +52,18 @@
 (arity isHoldingObject 2)
 (arg1Isa isHoldingObject Person)
 (arg2Isa isHoldingObject InanimateObject)
+
+(isa lastGiveTo Predicate)
+(arity lastGiveTo 3)
+(arg1Isa lastGiveTo Person)
+(arg2Isa lastGiveTo Person)
+(arg3Isa lastGiveTo InanimateObject)
+
+(isa wasInPlaceBefore Predicate)
+(arity wasInPlaceBefore 3)
+(arg1Isa wasInPlaceBefore InanimateObject)
+(arg2Isa wasInPlaceBefore Place)
+(arg3Isa wasInPlaceBefore Place)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Relations
@@ -81,5 +94,9 @@
 (arg2Isa giveTo Person)
 (arg3Isa giveTo InanimateObject)
 
+(isa wasObjectIn Relation)
+(arity wasObjectIn 2)
+(arg1Isa wasObjectIn InanimateObject)
+(arg2Isa wasObjectIn Place)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; End of Code
