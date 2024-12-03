@@ -5,6 +5,14 @@ by Jase et. al. from Facebook AI Research. Data set is under data/ folder.
 
 The approach used is to parse the text using a lisp file (main.lsp) and to use Companions reasoning system to answer queries.
 
+## Team
+Danilo Neves Ribeiro (daniloribeiro2021@u.northwestern.edu),
+Han Wang (han.wang@u.northwestern.edu)
+
+Supervised by Prof. Ken Forbus
+
+[Report](https://docs.google.com/document/d/19ellQXirDauy8WPuiLYFuamnf4elAPrY/edit?usp=drive_link&ouid=116992108108498082656&rtpof=true&sd=true)
+
 ## Requirements
 
 The following software is required to run this project:
