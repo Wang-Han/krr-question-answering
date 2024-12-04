@@ -9,7 +9,7 @@ The approach used is to parse the text using a lisp file (main.lsp) and to use C
 Danilo Neves Ribeiro (daniloribeiro2021@u.northwestern.edu),
 Han Wang (han.wang@u.northwestern.edu)
 
-Supervised by Prof. Ken Forbus
+Supervised by Prof. Ken Forbus, Northwestern University, IL, US 
 
 [Report](https://docs.google.com/document/d/19ellQXirDauy8WPuiLYFuamnf4elAPrY/edit?usp=drive_link&ouid=116992108108498082656&rtpof=true&sd=true)
 
